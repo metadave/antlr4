@@ -710,4 +710,34 @@ public class TestCompositeGrammars extends BaseTest {
 		assertEquals("", found);
 		assertNull(stderrDuringParse);
 	}
+
+    @Test public void testMultipleImports() throws Exception {
+        String a =
+                "grammar A;\n" +
+                "INT     : [0-9]+ ;\n";
+
+        String b =
+                "grammar B;\n" +
+                "CAPS : [A-Z]+ ;\n";
+
+        String master =
+                "grammar M;\n" +
+                "import B;\n" +
+                "import A;\n" +
+                "foo: INT ID CAPS { System.out.println(\"pass\"); };\n" +
+                "WS : (' '|'\\n') -> skip ;\n" +
+                "ID : [a-z]+ ;\n";
+
+        mkdir(tmpdir);
+        writeFile(tmpdir, "A.g4", a);
+        writeFile(tmpdir, "B.g4", b);
+
+        String result = execParser( "M.g4",
+                master,
+                "MParser",
+                "MLexer",
+                "foo", "10 aaa AAA", true);
+        System.out.println(">>>" + result);
+        //assertEquals("pass", result.trim());
+    }
 }
