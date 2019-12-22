@@ -151,13 +151,13 @@ impl IntervalSet {
         return Ok(self.intervals[0].a);
     }
 
-    fn add(&mut self, addition: Interval) -> Result<(), &str> {
+    fn add(&mut self, addition: &Interval) -> Result<(), &str> {
         if self.read_only {
             return Err("Can't alter readonly IntervalSet");
         } else {
             for index in 0..self.intervals.len() {
                 let r = self.intervals[index];
-                if addition == r {
+                if addition == &r {
                     return Ok(())
                 }
                 
@@ -188,7 +188,7 @@ impl IntervalSet {
                 }
                 if addition.starts_before_disjoint(&r) {
                     // insert before r
-                    self.intervals.insert(index, addition);
+                    self.intervals.insert(index, *addition);
                     println!("G");
                     return Ok(());
                 }
@@ -203,6 +203,12 @@ impl IntervalSet {
     // func (i *IntervalSet) addOne(v int) {
     //     i.addInterval(NewInterval(v, v+1))
     // }
+
+    fn addAll(&mut self, iset:&IntervalSet) {
+        for m in iset.intervals.iter() {
+            self.add(m);
+        }
+    }
 }
 
 
@@ -250,7 +256,7 @@ mod tests {
         let vs = vec![Interval::new(1,4), Interval::new(7,8)];
         let mut iset = IntervalSet::new_from_intervals(vs);
         let z = Interval::new(2, 6);
-        assert!(iset.add(z).is_ok());
+        assert!(iset.add(&z).is_ok());
         assert_eq!(iset.intervals.len(), 1);
         assert_eq!(iset.intervals[0], Interval::new(1,8));
     }
@@ -261,11 +267,10 @@ mod tests {
         let mut iset = IntervalSet::new_from_intervals(vs);
         println!("-----> {}", iset);
         let z = Interval::new(2, 13);
-        assert!(iset.add(z).is_ok());
+        assert!(iset.add(&z).is_ok());
         println!("-----> {}", iset);
-        
-        //assert_eq!(iset.intervals.len(), 1);
-        //assert_eq!(iset.intervals[0], Interval::new(1,8));
+        assert_eq!(iset.intervals.len(), 1);
+        assert_eq!(iset.intervals[0], Interval::new(1,13));
     }
 
     #[test]
@@ -273,7 +278,7 @@ mod tests {
         let vs = vec![Interval::new(1,4), Interval::new(10,12)];
         let mut iset = IntervalSet::new_from_intervals(vs);
         let z = Interval::new(6, 8);
-        assert!(iset.add(z).is_ok());
+        assert!(iset.add(&z).is_ok());
         assert_eq!(iset.intervals.len(), 3);
         assert_eq!(iset.intervals[0], Interval::new(1,4));
         assert_eq!(iset.intervals[1], Interval::new(6,8));
@@ -285,7 +290,7 @@ mod tests {
         let vs = vec![Interval::new(4,5), Interval::new(10,12)];
         let mut iset = IntervalSet::new_from_intervals(vs);
         let z = Interval::new(1, 2);
-        assert!(iset.add(z).is_ok());
+        assert!(iset.add(&z).is_ok());
         assert_eq!(iset.intervals.len(), 3);
         assert_eq!(iset.intervals[0], Interval::new(1,2));
         assert_eq!(iset.intervals[1], Interval::new(4,5));
