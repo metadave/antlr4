@@ -329,9 +329,9 @@ impl IntervalSet {
     // }
 
     // TODO: Err return type
-    pub fn remove(&mut self, el:i32) -> Result<(), String> {
+    pub fn remove(&mut self, el:i32) -> Result<(), IntervalSetError> {
         if self.read_only {
-            return Err("can't alter readonly IntervalSet".to_string())
+            return Err(IntervalSetError::CantAlterReadOnly)
         }
 
         for i in 0..self.intervals.len() {
@@ -364,12 +364,12 @@ impl IntervalSet {
         return Ok(())
     }
 
-    pub fn set_read_only(&mut self, v:bool) {
+    pub fn set_read_only(&mut self, v:bool) -> Result<(), IntervalSetError> {
         if self.read_only && !v {
-            // TODO
-            panic!("Can't alter readonly IntervalSet")
+            return Err(IntervalSetError::CantAlterReadOnly)
         }
         self.read_only = v;
+        return Ok(())
     }
 }
 
