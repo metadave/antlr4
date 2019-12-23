@@ -323,16 +323,48 @@ impl IntervalSet {
         return values;
     }
 
-    fn element_name(vocabulary:String) -> String {
-        // TODO
-        // TODO: create vocabulary
+    // fn element_name(vocabulary:String) -> String {
+    //     // TODO
+    //     // TODO: create vocabulary
+    // }
+
+    // TODO: Err return type
+    pub fn remove(&mut self, el:i32) -> Result<(), String> {
+        if self.read_only {
+            return Err("can't alter readonly IntervalSet".to_string())
+        }
+
+        for i in 0..self.intervals.len() {
+            let mut ival = self.intervals[i];
+            if el < ival.a {
+                break; // list is sorted and el is before this interval; not here
+            }
+            if el == ival.a && el == ival.b {
+                self.intervals.remove(i);
+                break;
+            }
+            // if on left edge x..b, adjust left
+            if el==ival.a {
+                ival.a = ival.a + 1;
+                break;
+            }
+            // if on right edge a..x, adjust right
+            if el==ival.b {
+                ival.b = ival.b - 1;
+                break;
+            }
+            // if in middle a..x..b, split interval
+            if el>ival.a && el<ival.b { // found in this interval
+                let oldb = ival.b;
+                ival.b = el-1;      // [a..x-1]
+                // TODO: do something with the result
+                let _ = self.add(Interval::new(el+1, oldb)); // add [x+1..b]
+            }
+        }
+        return Ok(())
     }
 
-    pub fn remove(&mut self, el:i32) {
-        // TODO
-    }
-
-    pub fn set_read_only(&mut self, bool v) {
+    pub fn set_read_only(&mut self, v:bool) {
         if self.read_only && !v {
             // TODO
             panic!("Can't alter readonly IntervalSet")
