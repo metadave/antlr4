@@ -1,4 +1,4 @@
-pub use crate::int_stream::INT_STREAM_EOF;
+pub use crate::antlr4::runtime::int_stream::INT_STREAM_EOF;
 
 pub enum TokenType {
     InvalidType,

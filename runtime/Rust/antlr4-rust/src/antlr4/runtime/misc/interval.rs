@@ -2,7 +2,7 @@ use std::cmp::max;
 use std::cmp::min;
 use std::fmt;
 
-pub use crate::token::TokenType;
+pub use crate::antlr4::runtime::token::TokenType;
 
 /** An immutable inclusive interval a..b */
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -193,12 +193,12 @@ impl IntervalSet {
         }
     }
 
-    pub fn addAll(&mut self, iset: IntervalSet) -> Result<(), IntervalSetError> {
+    pub fn add_all(&mut self, iset: IntervalSet) -> Result<(), IntervalSetError> {
         if self.read_only {
             return Err(IntervalSetError::CantAlterReadOnly);
         } else {
             for m in iset.intervals.iter() {
-                self.add(*m);
+                self.add(*m)?;
             }
             return Ok(());
         }

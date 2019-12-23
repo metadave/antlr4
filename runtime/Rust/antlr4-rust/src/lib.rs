@@ -1,8 +1,7 @@
-// This does NOT represent the final module structure
-pub mod char_stream;
-pub mod int_stream;
-pub mod interval;
-pub mod token;
+pub mod antlr4 {
+    pub mod runtime;
+}
+
 
 #[cfg(test)]
 mod tests {
