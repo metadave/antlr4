@@ -127,8 +127,11 @@ impl IntervalSet {
         }
     }
 
-    pub fn of(&mut self, a: i32, b: i32) {
+    //<'a>(&'a mut self, arg: String) -> &'a mut Command
+
+    pub fn of(&mut self, a: i32, b: i32) -> &mut IntervalSet {
         self.intervals.push(Interval::new(a, b));
+        self
     }
 
     // TODO: better name?
@@ -145,12 +148,16 @@ impl IntervalSet {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.intervals.len() == 0
+    }
+
     pub fn first(&self) -> Result<i32, TokenType> {
         if self.intervals.len() == 0 {
             return Err(TokenType::InvalidType);
         }
         return Ok(self.intervals[0].a);
-    }
+    }   
 
     fn add(&mut self, addition: Interval) -> Result<(), IntervalSetError> {
         if self.read_only {
@@ -193,7 +200,7 @@ impl IntervalSet {
         }
     }
 
-    pub fn add_all(&mut self, iset: IntervalSet) -> Result<(), IntervalSetError> {
+    pub fn add_set(&mut self, iset: &IntervalSet) -> Result<(), IntervalSetError> {
         if self.read_only {
             return Err(IntervalSetError::CantAlterReadOnly);
         } else {
@@ -203,7 +210,115 @@ impl IntervalSet {
             return Ok(());
         }
     }
+
+
+    pub fn complement_range(&self, a:i32, b:i32) -> Option<IntervalSet> {
+        return self.complement(&IntervalSet::new().of(a, b));
+    }
+
+    pub fn complement(&self, vocab:&IntervalSet) -> Option<IntervalSet> {
+        if vocab.is_empty() {
+            return None
+        } else {
+            return Some(vocab.subtract(self))
+        }
+    }
+
+    pub fn subtract(&self, other: &IntervalSet) -> IntervalSet {
+        subtract_intervalsets(self, other)
+    }
+
+    pub fn and(&self, other:&Option<&IntervalSet>) -> Option<IntervalSet> {
+        if let Some(other) = other {
+            let _my_intervals = &self.intervals;
+            let _their_intervals = &other.intervals;
+            return None;
+        } else {
+            return None
+        }
+        
+    }
 }
+
+
+pub fn subtract_intervalsets(left: &IntervalSet, right: &IntervalSet) -> IntervalSet {
+    if left.is_empty() {
+        return IntervalSet::new()
+    }
+
+    let mut result = IntervalSet::new_from_intervals(left.intervals.clone());
+    if right.is_empty() {
+        // right set has no elements; just return the copy of the current set
+        return result
+    } 
+
+    let mut result_i:i32 = 0;
+    let mut right_i:i32 = 0;
+    while (result_i as usize) < result.intervals.len() && (right_i as usize) < right.intervals.len() {
+        let result_interval = result.intervals[result_i as usize];
+        let right_interval = right.intervals[right_i as usize];
+
+        // operation: (resultInterval - rightInterval) and update indexes
+
+        if right_interval.b < result_interval.a {
+            right_i += 1;
+            continue;
+        }
+
+        if right_interval.a > result_interval.b {
+            result_i += 1;
+            continue;
+        }
+
+        let mut before_current:Option<Interval> = None;
+        let mut after_current:Option<Interval> = None;
+        
+        if right_interval.a > result_interval.a {
+            before_current = Some(Interval::new(result_interval.a, right_interval.a - 1));
+        }
+
+        if right_interval.b < result_interval.b {
+            after_current = Some(Interval::new(right_interval.b + 1, result_interval.b));
+        }
+
+
+        if before_current.is_some() {
+            if after_current.is_some() {
+                // split the current interval into two
+                result.intervals[result_i as usize] = before_current.unwrap();
+                result.intervals.insert(result_i as usize +1 , after_current.unwrap());
+                result_i += 1;
+                continue;
+            }
+            else {
+                // replace the current interval
+                result.intervals[result_i as usize] = before_current.unwrap();
+                result_i += 1;
+                continue;
+            }
+        }
+        else {
+            if after_current.is_some() {
+                // replace the current interval
+                result.intervals[result_i as usize] = after_current.unwrap();
+                right_i += 1;
+                continue;
+            }
+            else {
+                // remove the current interval (thus no need to increment resultI)
+                result.intervals.remove(result_i as usize);
+                continue;
+            }
+        }
+    }
+
+    // If rightI reached right.intervals.size(), no more intervals to subtract from result.
+    // If resultI reached result.intervals.size(), we would be subtracting from an empty set.
+    // Either way, we are done.
+    return result
+}
+
+
 
 impl fmt::Display for IntervalSet {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
