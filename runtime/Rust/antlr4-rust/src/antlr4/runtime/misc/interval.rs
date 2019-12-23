@@ -230,16 +230,128 @@ impl IntervalSet {
 
     pub fn and(&self, other:&Option<&IntervalSet>) -> Option<IntervalSet> {
         if let Some(other) = other {
-            let _my_intervals = &self.intervals;
-            let _their_intervals = &other.intervals;
-            return None;
+            let my_intervals = &self.intervals;
+            let their_intervals = &other.intervals;
+            let mut intersection:IntervalSet = IntervalSet::new();
+            let my_size = my_intervals.len();
+            let their_size = their_intervals.len();
+            let mut i:i32 = 0;
+            let mut j:i32 = 0;
+
+            while (i as usize) < my_size && (j as usize) < their_size {
+                let mine = &my_intervals[i as usize];
+                let theirs = &their_intervals[j as usize];
+                if mine.starts_before_disjoint(&theirs) {
+                    i += 1;
+                } else if theirs.starts_before_disjoint(&mine) {
+                    j += 1;
+                } else if mine.properly_contains(&theirs) {
+                    // TODO: deal with this result
+                    let _ = intersection.add(mine.intersection(theirs));
+                    j = j+1;
+                } else if theirs.properly_contains(&mine) {
+                    let _ = intersection.add(mine.intersection(theirs));
+                    j = j+1;
+                } else if !mine.disjoint(theirs) {
+                    let _ = intersection.add(mine.intersection(theirs));
+                    if mine.starts_after_non_disjoint(theirs) {
+                        j = j + 1;
+                    } else if theirs.starts_after_non_disjoint(mine) {
+                        i = i + 1;
+                    }
+                }
+            }
+            return Some(intersection);
         } else {
             return None
         }
-        
+    }
+
+    pub fn contains(&self, el:i32) -> bool {
+        let n = self.intervals.len();
+		let mut l = 0;
+		let mut r = n - 1;
+		// Binary search for the element in the (sorted,
+		// disjoint) array of intervals.
+		while l <= r {
+			let m = (l + r) / 2;
+			let ival:Interval = self.intervals[m];
+			let a = ival.a;
+			let b = ival.b;
+			if b < el {
+				l = m + 1;
+			} else if  a>el  {
+				r = m - 1;
+			} else { // el >= a && el <= b
+				return true;
+			}
+		}
+		return false;
+    }
+
+    pub fn get_max_element(&self) -> Option<i32> {
+        self.intervals.last().map(|l:&Interval| l.b)
+    }
+
+    pub fn get_min_element(&self) -> Option<i32> {
+        self.intervals.first().map(|l:&Interval| l.a)
+    }
+
+    pub fn size(&self) -> i32 {
+        let mut n = 0;
+		let num_intervals = self.intervals.len();
+		if num_intervals==1 {
+			let first_interval:Interval = self.intervals[0];
+			return first_interval.b-first_interval.a+1;
+		}
+        for i in 0..num_intervals {
+            let ival = self.intervals[i];
+            n += ival.b - ival.a + 1;
+        }
+		return n;
+    }
+
+    pub fn to_integer_list(&self) -> Vec<i32> {
+        let mut values = Vec::new();
+        let n = self.intervals.len();
+        for i in 0..n {
+            let ival = self.intervals[i];
+            for v in ival.a..=ival.b {
+                values.push(v);
+            }
+        }
+        return values;
+    }
+
+    fn element_name(vocabulary:String) -> String {
+        // TODO
+        // TODO: create vocabulary
+    }
+
+    pub fn remove(&mut self, el:i32) {
+        // TODO
+    }
+
+    pub fn set_read_only(&mut self, bool v) {
+        if self.read_only && !v {
+            // TODO
+            panic!("Can't alter readonly IntervalSet")
+        }
+        self.read_only = v;
     }
 }
 
+impl fmt::Display for IntervalSet {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let l = self
+            .intervals
+            .iter()
+            .map(|&x| x.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+        write!(f, "[{}]", l)
+    }
+}
 
 pub fn subtract_intervalsets(left: &IntervalSet, right: &IntervalSet) -> IntervalSet {
     if left.is_empty() {
@@ -320,17 +432,7 @@ pub fn subtract_intervalsets(left: &IntervalSet, right: &IntervalSet) -> Interva
 
 
 
-impl fmt::Display for IntervalSet {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let l = self
-            .intervals
-            .iter()
-            .map(|&x| x.to_string())
-            .collect::<Vec<String>>()
-            .join(", ");
-        write!(f, "[{}]", l)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {
