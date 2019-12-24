@@ -1,5 +1,7 @@
 use std::cmp;
 
+use crate::antlr4::runtime::token::TokenType;
+
 pub trait Vocabulary {
     fn get_max_token_type() -> i32;
     fn get_literal_name(token_type: i32) -> String;
@@ -7,6 +9,7 @@ pub trait Vocabulary {
 }
 
 pub struct VocabularyImpl {
+    // TODO: convert to &str?
     literal_names: Vec<Option<String>>,
     symbolic_names: Vec<Option<String>>,
     display_names: Vec<Option<String>>,
@@ -54,5 +57,45 @@ impl VocabularyImpl {
             }
             return VocabularyImpl::new(literal_names, symbolic_names, token_names);
         }
+    }
+
+    pub fn get_max_token_type(&self) -> i32 {
+        return self.max_token_type;
+    }
+
+    pub fn get_literal_name(&self, token_type:i32) -> Option<&str> {
+        if token_type >= 0 && token_type < (self.literal_names.len() as i32) {
+            if let Some(x) = self.literal_names[token_type as usize] {
+                return Some(&x);
+            } else {
+                return None;
+            }
+        }
+        return None;
+    }
+
+    pub fn get_symbolic_name(&self, token_type: i32) -> Option<String> {
+        if token_type >= 0 && token_type < (self.symbolic_names.len() as i32) {
+            return self.symbolic_names[token_type as usize].clone();
+        }
+        if token_type == TokenType::EOF.value() {
+            return Some(String::from("EOF"));
+        }
+        return None;
+    }
+
+    pub fn get_display_name(&self, token_type:i32) -> Option<String> {
+        if token_type >= 0 && token_type < (self.display_names.len() as i32) {
+            return self.display_names[token_type as usize].clone();
+        }
+
+        if let Some(ln) = self.get_literal_name(token_type) {
+            return Some(ln);
+        }
+
+        if let Some(sn) = self.get_symbolic_name(token_type) {
+            return Some(sn);
+        }
+        return None;
     }
 }
