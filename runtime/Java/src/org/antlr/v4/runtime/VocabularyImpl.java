@@ -14,7 +14,7 @@ import java.util.Arrays;
  * @author Sam Harwell
  */
 public class VocabularyImpl implements Vocabulary {
-	private static final String[] EMPTY_NAMES = new String[0];
+	private static final String[.EMPTY_NAMES = new String[0];
 
 	/**
 	 * Gets an empty {@link Vocabulary} instance.
