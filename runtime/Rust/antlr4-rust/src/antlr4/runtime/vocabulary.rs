@@ -9,7 +9,6 @@ pub trait Vocabulary {
 }
 
 pub struct VocabularyImpl {
-    // TODO: convert to &str?
     literal_names: Vec<Option<String>>,
     symbolic_names: Vec<Option<String>>,
     display_names: Vec<Option<String>>,
@@ -38,20 +37,16 @@ impl VocabularyImpl {
             let mut symbolic_names:Vec<Option<String>> = token_names.clone();
             
             for i in 0..token_names.len() {
-                match &token_names[i] {
-                    None => continue,
-                    Some(token_name) => {    
-                        let first_char = token_name.chars().next().unwrap();
-                        if first_char == '\'' {
-                            symbolic_names[i] = None;
-                            continue
-                        } else if first_char.is_uppercase() {
-                            literal_names[i] = None;
-                            continue
-                        }
+                if let Some(token_name) = &token_names[i] {
+                    let first_char = token_name.chars().next().unwrap();
+                    if first_char == '\'' {
+                        symbolic_names[i] = None;
+                        continue
+                    } else if first_char.is_uppercase() {
+                        literal_names[i] = None;
+                        continue
                     }
                 }
-                
                 literal_names[i] = None;
                 symbolic_names[i] = None;
             }
@@ -63,13 +58,9 @@ impl VocabularyImpl {
         return self.max_token_type;
     }
 
-    pub fn get_literal_name(&self, token_type:i32) -> Option<&str> {
+    pub fn get_literal_name(&self, token_type:i32) -> Option<String> {
         if token_type >= 0 && token_type < (self.literal_names.len() as i32) {
-            if let Some(x) = self.literal_names[token_type as usize] {
-                return Some(&x);
-            } else {
-                return None;
-            }
+            return self.literal_names[token_type as usize].clone();
         }
         return None;
     }
@@ -90,7 +81,7 @@ impl VocabularyImpl {
         }
 
         if let Some(ln) = self.get_literal_name(token_type) {
-            return Some(ln);
+            return Some(ln.to_string());
         }
 
         if let Some(sn) = self.get_symbolic_name(token_type) {
