@@ -81,7 +81,7 @@ impl VocabularyImpl {
         }
 
         if let Some(ln) = self.get_literal_name(token_type) {
-            return Some(ln.to_string());
+            return Some(ln);
         }
 
         if let Some(sn) = self.get_symbolic_name(token_type) {
